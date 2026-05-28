@@ -2,6 +2,7 @@ package io.github.gitfilo.chatmodel.audit.actuator;
 
 import io.github.gitfilo.chatmodel.audit.ComplianceAuditAutoConfiguration;
 import io.github.gitfilo.chatmodel.audit.ComplianceAuditProperties;
+import io.github.gitfilo.chatmodel.audit.core.compliance.ComplianceProfile;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -23,6 +24,15 @@ public class LlmAuditActuatorAutoConfiguration {
     @ConditionalOnProperty(prefix = "audit.compliance.actuator", name = "stats-enabled", havingValue = "true", matchIfMissing = true)
     AuditStatsService auditStatsService(JdbcTemplate jdbcTemplate, ComplianceAuditProperties props) {
         return new JdbcAuditStatsService(jdbcTemplate, props);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(AuditSearchService.class)
+    @ConditionalOnBean(JdbcTemplate.class)
+    @ConditionalOnProperty(prefix = "audit.compliance.actuator", name = "search-enabled", havingValue = "true", matchIfMissing = true)
+    AuditSearchService auditSearchService(JdbcTemplate jdbcTemplate, ComplianceAuditProperties props) {
+        ComplianceProfile profile = ComplianceProfile.fromMode(props.getCompliance().getMode());
+        return new JdbcAuditSearchService(jdbcTemplate, props, profile);
     }
 
     @Bean
