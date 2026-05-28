@@ -1,6 +1,5 @@
 package io.modelaudit.chatmodel.audit;
 
-import io.modelaudit.chatmodel.audit.core.compliance.ComplianceProfile;
 import io.modelaudit.chatmodel.audit.core.cost.CostCalculator;
 import io.modelaudit.chatmodel.audit.core.cost.DefaultCostCalculator;
 import io.modelaudit.chatmodel.audit.core.cost.ExchangeRateProvider;
@@ -27,12 +26,6 @@ import java.math.BigDecimal;
 @ConditionalOnProperty(prefix = "audit.compliance", name = "enabled", havingValue = "true", matchIfMissing = false)
 @EnableConfigurationProperties(ComplianceAuditProperties.class)
 public class ComplianceAuditAutoConfiguration {
-
-    @Bean
-    @ConditionalOnMissingBean
-    ComplianceProfile complianceProfile(ComplianceAuditProperties props) {
-        return ComplianceProfile.fromMode(props.getCompliance().getMode());
-    }
 
     // user-id-resolver: spring-security(default) / mdc / header — 미지원 값은 spring-security로 폴백
     @Bean

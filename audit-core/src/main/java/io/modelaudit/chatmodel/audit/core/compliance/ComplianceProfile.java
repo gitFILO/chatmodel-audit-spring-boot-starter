@@ -2,6 +2,7 @@ package io.modelaudit.chatmodel.audit.core.compliance;
 
 import java.util.List;
 
+// 외부 starter가 자기 ComplianceProfile만 @Bean 등록하면 mode 한 줄로 활성화 — 빈 선택은 AutoConfig의 Map<String,ComplianceProfile> lookup
 public interface ComplianceProfile {
 
     String name();
@@ -15,15 +16,4 @@ public interface ComplianceProfile {
     boolean maskOutputOnSearch();
 
     CostCurrency costCurrency();
-
-    // audit.compliance.compliance.mode 값을 받아 프로파일 인스턴스를 선택 — null/미지원 모드는 DefaultProfile
-    static ComplianceProfile fromMode(String mode) {
-        if (mode == null || mode.isBlank()) {
-            return DefaultProfile.INSTANCE;
-        }
-        return switch (mode) {
-            case "kr-financial" -> KrFinancialProfile.INSTANCE;
-            default -> DefaultProfile.INSTANCE;
-        };
-    }
 }
