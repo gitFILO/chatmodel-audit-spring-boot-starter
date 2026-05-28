@@ -1,6 +1,7 @@
 package io.modelaudit.chatmodel.audit.actuator;
 
 import io.modelaudit.chatmodel.audit.ComplianceAuditAutoConfiguration;
+import io.modelaudit.chatmodel.audit.ComplianceAuditProperties;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -9,11 +10,20 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @AutoConfiguration(after = ComplianceAuditAutoConfiguration.class)
 @ConditionalOnClass(Endpoint.class)
 @ConditionalOnProperty(prefix = "audit.compliance", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class LlmAuditActuatorAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(AuditStatsService.class)
+    @ConditionalOnBean(JdbcTemplate.class)
+    @ConditionalOnProperty(prefix = "audit.compliance.actuator", name = "stats-enabled", havingValue = "true", matchIfMissing = true)
+    AuditStatsService auditStatsService(JdbcTemplate jdbcTemplate, ComplianceAuditProperties props) {
+        return new JdbcAuditStatsService(jdbcTemplate, props);
+    }
 
     @Bean
     @ConditionalOnMissingBean
