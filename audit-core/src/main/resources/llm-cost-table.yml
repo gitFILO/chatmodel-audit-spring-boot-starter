@@ -1,0 +1,61 @@
+# LLM 단가 테이블 — token 1,000,000 당 USD
+# 사용자 오버라이드: audit.compliance.cost.table=classpath:/my-cost-table.yml
+# 단가 출처: 각 provider 공식 페이지 2026-Q2 기준. 변동 시 사용자가 직접 갱신.
+
+exchange-rates:
+  usd-to-krw: 1380
+
+models:
+  # Anthropic — claude.ai/pricing 2026-Q2
+  - provider: anthropic
+    model: claude-opus-4-7
+    input-per-million-usd: 15.00
+    output-per-million-usd: 75.00
+  - provider: anthropic
+    model: claude-sonnet-4-6
+    input-per-million-usd: 3.00
+    output-per-million-usd: 15.00
+  - provider: anthropic
+    model: claude-haiku-4-5
+    input-per-million-usd: 1.00
+    output-per-million-usd: 5.00
+  - provider: anthropic
+    model: claude-3-5-sonnet
+    input-per-million-usd: 3.00
+    output-per-million-usd: 15.00
+
+  # OpenAI — openai.com/pricing 2026-Q2
+  - provider: openai
+    model: gpt-4o
+    input-per-million-usd: 2.50
+    output-per-million-usd: 10.00
+  - provider: openai
+    model: gpt-4o-mini
+    input-per-million-usd: 0.15
+    output-per-million-usd: 0.60
+  - provider: openai
+    model: gpt-4-turbo
+    input-per-million-usd: 10.00
+    output-per-million-usd: 30.00
+  - provider: openai
+    model: o1-mini
+    input-per-million-usd: 3.00
+    output-per-million-usd: 12.00
+
+  # Ollama — 로컬 추론, 단가 0
+  - provider: ollama
+    model: llama3
+    input-per-million-usd: 0
+    output-per-million-usd: 0
+  - provider: ollama
+    model: llama3.1
+    input-per-million-usd: 0
+    output-per-million-usd: 0
+  - provider: ollama
+    model: mistral
+    input-per-million-usd: 0
+    output-per-million-usd: 0
+  - provider: ollama
+    model: qwen2
+    input-per-million-usd: 0
+    output-per-million-usd: 0
