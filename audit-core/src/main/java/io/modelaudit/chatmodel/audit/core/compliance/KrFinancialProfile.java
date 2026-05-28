@@ -6,16 +6,14 @@ public final class KrFinancialProfile implements ComplianceProfile {
 
     public static final KrFinancialProfile INSTANCE = new KrFinancialProfile();
 
-    // vault 06-korean-compliance §3 — 한국 금융 PII 8종 표준 셋
+    // v0.1 한국 PII 6종 — id는 PiiDetector.id()와 매칭 (kr-account/kr-health-insurance-no는 외부 detector로 확장)
     private static final List<String> PII_PROVIDERS = List.of(
-            "resident-no",
-            "account",
-            "card",
-            "business-no",
-            "phone",
-            "email",
-            "health-insurance-no",
-            "foreigner-id"
+            "kr-resident-no",
+            "kr-foreigner-id",
+            "kr-card",
+            "kr-business-no",
+            "kr-phone",
+            "email"
     );
 
     private KrFinancialProfile() {
