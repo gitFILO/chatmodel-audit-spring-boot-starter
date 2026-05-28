@@ -6,6 +6,7 @@ import io.modelaudit.chatmodel.audit.metrics.AuditMicrometerMetrics;
 import io.micrometer.core.instrument.Timer;
 import org.springframework.beans.factory.DisposableBean;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -26,6 +27,8 @@ public class AsyncBatchWriter implements DisposableBean {
     private final OverflowPolicy overflowPolicy;
     private final AuditMicrometerMetrics metrics;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
+    private volatile Instant lastFlushAt;
+    private volatile long lastFlushDurationMs = -1L;
 
     public AsyncBatchWriter(JdbcAuditRecordRepository repo,
                             ComplianceAuditProperties props,
@@ -89,11 +92,14 @@ public class AsyncBatchWriter implements DisposableBean {
             return;
         }
         Timer.Sample sample = metrics != null ? metrics.flushTimerStart() : null;
+        long startNs = System.nanoTime();
         try {
             repo.batchInsert(batch);
             if (metrics != null) {
                 metrics.flushBatchSize(batch.size());
             }
+            lastFlushDurationMs = Math.max(0L, (System.nanoTime() - startNs) / 1_000_000L);
+            lastFlushAt = Instant.now();
         } catch (Exception e) {
             if (metrics != null) {
                 metrics.flushErrorCounter().increment();
@@ -119,6 +125,14 @@ public class AsyncBatchWriter implements DisposableBean {
 
     public boolean isShuttingDown() {
         return shuttingDown.get();
+    }
+
+    public Instant lastFlushAt() {
+        return lastFlushAt;
+    }
+
+    public long lastFlushDurationMs() {
+        return lastFlushDurationMs;
     }
 
     @Override
