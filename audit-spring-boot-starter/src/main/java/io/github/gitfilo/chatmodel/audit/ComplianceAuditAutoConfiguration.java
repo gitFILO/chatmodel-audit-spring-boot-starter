@@ -1,8 +1,10 @@
 package io.github.gitfilo.chatmodel.audit;
 
 import io.github.gitfilo.chatmodel.audit.core.compliance.ComplianceProfile;
+import io.github.gitfilo.chatmodel.audit.core.resolver.TeamIdResolver;
 import io.github.gitfilo.chatmodel.audit.core.resolver.UserIdResolver;
 import io.github.gitfilo.chatmodel.audit.resolver.HeaderUserIdResolver;
+import io.github.gitfilo.chatmodel.audit.resolver.MdcTeamIdResolver;
 import io.github.gitfilo.chatmodel.audit.resolver.MdcUserIdResolver;
 import io.github.gitfilo.chatmodel.audit.resolver.SpringSecurityUserIdResolver;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -35,5 +37,11 @@ public class ComplianceAuditAutoConfiguration {
             case "header" -> new HeaderUserIdResolver(props.getUserIdHeaderName());
             default -> new SpringSecurityUserIdResolver();
         };
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    TeamIdResolver teamIdResolver(ComplianceAuditProperties props) {
+        return new MdcTeamIdResolver(props.getTeamIdMdcKey());
     }
 }
