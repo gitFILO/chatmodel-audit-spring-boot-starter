@@ -3,6 +3,7 @@ package io.github.gitfilo.chatmodel.audit.actuator;
 import io.github.gitfilo.chatmodel.audit.ComplianceAuditAutoConfiguration;
 import io.github.gitfilo.chatmodel.audit.ComplianceAuditProperties;
 import io.github.gitfilo.chatmodel.audit.core.compliance.ComplianceProfile;
+import io.github.gitfilo.chatmodel.audit.writer.AsyncBatchWriter;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -12,6 +13,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
+
+import javax.sql.DataSource;
 
 @AutoConfiguration(after = ComplianceAuditAutoConfiguration.class)
 @ConditionalOnClass(Endpoint.class)
@@ -33,6 +36,13 @@ public class LlmAuditActuatorAutoConfiguration {
     AuditSearchService auditSearchService(JdbcTemplate jdbcTemplate, ComplianceAuditProperties props) {
         ComplianceProfile profile = ComplianceProfile.fromMode(props.getCompliance().getMode());
         return new JdbcAuditSearchService(jdbcTemplate, props, profile);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(AuditHealthService.class)
+    @ConditionalOnBean({AsyncBatchWriter.class, DataSource.class})
+    AuditHealthService auditHealthService(AsyncBatchWriter writer, DataSource dataSource) {
+        return new JdbcAuditHealthService(writer, dataSource);
     }
 
     @Bean
