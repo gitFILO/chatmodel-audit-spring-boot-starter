@@ -4,6 +4,14 @@ import io.modelaudit.chatmodel.audit.ComplianceAuditProperties;
 import io.modelaudit.chatmodel.audit.core.compliance.ComplianceProfile;
 import io.modelaudit.chatmodel.audit.core.compliance.DefaultProfile;
 import io.modelaudit.chatmodel.audit.core.compliance.KrFinancialProfile;
+import io.modelaudit.chatmodel.audit.core.compliance.pii.EmailDetector;
+import io.modelaudit.chatmodel.audit.core.compliance.pii.KoreanBusinessNoDetector;
+import io.modelaudit.chatmodel.audit.core.compliance.pii.KoreanCardDetector;
+import io.modelaudit.chatmodel.audit.core.compliance.pii.KoreanForeignerIdDetector;
+import io.modelaudit.chatmodel.audit.core.compliance.pii.KoreanPhoneDetector;
+import io.modelaudit.chatmodel.audit.core.compliance.pii.KoreanResidentNoDetector;
+import io.modelaudit.chatmodel.audit.core.compliance.pii.PiiDetector;
+import io.modelaudit.chatmodel.audit.core.compliance.pii.PiiMaskService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +34,7 @@ class JdbcAuditSearchServiceTest {
     private EmbeddedDatabase ds;
     private JdbcTemplate jdbc;
     private ComplianceAuditProperties props;
+    private List<PiiDetector> detectors;
 
     @BeforeEach
     void setUp() {
@@ -36,6 +45,14 @@ class JdbcAuditSearchServiceTest {
             .build();
         jdbc = new JdbcTemplate(ds);
         props = new ComplianceAuditProperties();
+        detectors = List.of(
+            new KoreanResidentNoDetector(),
+            new KoreanForeignerIdDetector(),
+            new KoreanCardDetector(),
+            new KoreanBusinessNoDetector(),
+            new KoreanPhoneDetector(),
+            new EmailDetector()
+        );
     }
 
     @AfterEach
@@ -44,7 +61,14 @@ class JdbcAuditSearchServiceTest {
     }
 
     private JdbcAuditSearchService svc(ComplianceProfile profile) {
-        return new JdbcAuditSearchService(jdbc, props, profile);
+        List<String> active = profile.piiMaskEnabled() ? profile.piiProviders() : List.of();
+        PiiMaskService mask = new PiiMaskService(detectors, active);
+        return new JdbcAuditSearchService(jdbc, props, profile, mask);
+    }
+
+    // 정규식 하드코딩 금지를 입증 — 마스킹을 항상 적용하는 detector를 주입해서 위임 동작만 검증
+    private JdbcAuditSearchService svcWithMask(ComplianceProfile profile, PiiMaskService mask) {
+        return new JdbcAuditSearchService(jdbc, props, profile, mask);
     }
 
     @Test
@@ -85,7 +109,6 @@ class JdbcAuditSearchServiceTest {
         insert(base.plusSeconds(3), "beta", "alice", "openai", "gpt-4o", "p", "r", "SUCCESS");
         insert(base.plusSeconds(4), "alpha", "alice", "anthropic", "claude-opus-4-7", "p", "r", "FAILED");
 
-        // user=alice, team=alpha, provider=openai, model=gpt-4o, status=SUCCESS → 1건
         Map<String, Object> r = svc(DefaultProfile.INSTANCE)
             .search(null, "alice", "alpha", "openai", "gpt-4o", "success", "2026-06-01", "2026-06-30", null, null);
         assertThat(r.get("total")).isEqualTo(1L);
@@ -147,7 +170,7 @@ class JdbcAuditSearchServiceTest {
     }
 
     @Test
-    void kr_financial_profile_masks_prompt_and_response() {
+    void kr_financial_profile_masks_prompt_and_response_via_pii_service() {
         Instant base = Instant.parse("2026-06-15T10:00:00Z");
         insert(base, "alpha", "u1", "openai", "gpt-4o",
             "고객 900101-1234567 의 대출 한도 조회",
@@ -161,12 +184,12 @@ class JdbcAuditSearchServiceTest {
         assertThat(results).hasSize(1);
         String prompt = (String) results.get(0).get("prompt");
         String response = (String) results.get(0).get("response");
-        assertThat(prompt).contains("[MASKED:rrn:01]").doesNotContain("900101-1234567");
-        assertThat(response).contains("[MASKED:tel:05]").doesNotContain("010-1234-5678");
+        assertThat(prompt).doesNotContain("900101-1234567");
+        assertThat(response).doesNotContain("010-1234-5678");
     }
 
     @Test
-    void mask_output_property_overrides_default_profile() {
+    void mask_output_property_delegates_to_pii_service_even_for_default_profile() {
         props.getActuator().getSearch().setMaskOutput(true);
         Instant base = Instant.parse("2026-06-15T10:00:00Z");
         insert(base, "alpha", "u1", "openai", "gpt-4o",
@@ -174,12 +197,21 @@ class JdbcAuditSearchServiceTest {
             "확인했습니다",
             "SUCCESS");
 
+        // mask-output=true 일 때 DefaultProfile (piiMaskEnabled=false) 라도 PiiMaskService에 위임 — activeIds 가 비면 원문 유지
         Map<String, Object> r = svc(DefaultProfile.INSTANCE)
             .search(null, null, null, null, null, null, "2026-06-01", "2026-06-30", null, null);
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> results = (List<Map<String, Object>>) r.get("results");
         String prompt = (String) results.get(0).get("prompt");
-        assertThat(prompt).contains("[MASKED:email:06]").doesNotContain("user@example.com");
+        assertThat(prompt).contains("user@example.com");
+
+        // 외부 starter 가 PiiMaskService 에 활성 detector 를 넣으면 — Default 모드 + mask-output 으로도 마스킹됨
+        PiiMaskService activeMask = new PiiMaskService(detectors, List.of("email"));
+        Map<String, Object> r2 = svcWithMask(DefaultProfile.INSTANCE, activeMask)
+            .search(null, null, null, null, null, null, "2026-06-01", "2026-06-30", null, null);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> results2 = (List<Map<String, Object>>) r2.get("results");
+        assertThat((String) results2.get(0).get("prompt")).doesNotContain("user@example.com");
     }
 
     @Test
@@ -218,6 +250,22 @@ class JdbcAuditSearchServiceTest {
     void byTrace_blank_throws() {
         assertThatThrownBy(() -> svc(DefaultProfile.INSTANCE).byTrace(" "))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void byTrace_masks_via_pii_service_when_profile_demands_it() {
+        String trace = "trace-mask";
+        Instant base = Instant.parse("2026-06-15T10:00:00Z");
+        insertWithTrace(base, trace, "alpha", "u1", "openai", "gpt-4o",
+            "주민 900101-1234567",
+            "전화 010-9999-8888",
+            "SUCCESS");
+
+        Map<String, Object> r = svc(KrFinancialProfile.INSTANCE).byTrace(trace);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> results = (List<Map<String, Object>>) r.get("results");
+        assertThat((String) results.get(0).get("prompt")).doesNotContain("900101-1234567");
+        assertThat((String) results.get(0).get("response")).doesNotContain("010-9999-8888");
     }
 
     @Test
@@ -262,32 +310,6 @@ class JdbcAuditSearchServiceTest {
         assertThat(r.get("total")).isEqualTo(1L);
         assertThat(r.get("from")).isEqualTo("2026-06-15T00:00:00Z");
         assertThat(r.get("to")).isEqualTo("2026-06-15T23:59:59Z");
-    }
-
-    @Test
-    void maskPii_replaces_all_six_categories() {
-        String src = "고객 900101-1234567 외국인 950101-5234567 카드 1234-5678-1234-5678 "
-            + "사업자 123-45-67890 전화 010-1234-5678 메일 alice@bank.co.kr 처리";
-        String masked = JdbcAuditSearchService.maskPii(src);
-        assertThat(masked)
-            .contains("[MASKED:rrn:01]")
-            .contains("[MASKED:fgnid:08]")
-            .contains("[MASKED:card:03]")
-            .contains("[MASKED:bizno:04]")
-            .contains("[MASKED:tel:05]")
-            .contains("[MASKED:email:06]")
-            .doesNotContain("900101-1234567")
-            .doesNotContain("950101-5234567")
-            .doesNotContain("1234-5678-1234-5678")
-            .doesNotContain("123-45-67890")
-            .doesNotContain("010-1234-5678")
-            .doesNotContain("alice@bank.co.kr");
-    }
-
-    @Test
-    void maskPii_null_safe() {
-        assertThat(JdbcAuditSearchService.maskPii(null)).isNull();
-        assertThat(JdbcAuditSearchService.maskPii("")).isEmpty();
     }
 
     private void insert(Instant invokedAt, String teamId, String userId,

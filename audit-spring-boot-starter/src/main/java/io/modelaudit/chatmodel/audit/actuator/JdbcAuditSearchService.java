@@ -2,6 +2,7 @@ package io.modelaudit.chatmodel.audit.actuator;
 
 import io.modelaudit.chatmodel.audit.ComplianceAuditProperties;
 import io.modelaudit.chatmodel.audit.core.compliance.ComplianceProfile;
+import io.modelaudit.chatmodel.audit.core.compliance.pii.PiiMaskService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -18,7 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 // vault 05 §5-2/§5-3/§5-4 — q/user/team/provider/model/status 필터, by-trace 체인, flag 토글
 public class JdbcAuditSearchService implements AuditSearchService {
@@ -27,25 +27,20 @@ public class JdbcAuditSearchService implements AuditSearchService {
     private static final int MIN_LIMIT = 1;
     private static final long DEFAULT_WINDOW_SECONDS = 30L * 86400L;
 
-    // vault 06 §3 — 한국 PII 6종 단순 정규식 (v0.1, v0.2에서 별도 starter로 정밀 검증)
-    private static final Pattern P_RRN = Pattern.compile("\\b\\d{6}[-\\s]?[1-4]\\d{6}\\b");
-    private static final Pattern P_FOREIGNER = Pattern.compile("\\b\\d{6}[-\\s]?[5-8]\\d{6}\\b");
-    private static final Pattern P_CARD = Pattern.compile("\\b\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}\\b");
-    private static final Pattern P_BIZ = Pattern.compile("\\b\\d{3}[-\\s]?\\d{2}[-\\s]?\\d{5}\\b");
-    private static final Pattern P_PHONE = Pattern.compile("\\b01\\d[-\\s]?\\d{3,4}[-\\s]?\\d{4}\\b");
-    private static final Pattern P_EMAIL = Pattern.compile("[\\w.+-]+@[\\w.-]+\\.[A-Za-z]{2,}");
-
     private final JdbcTemplate jdbc;
     private final ComplianceAuditProperties props;
     private final ComplianceProfile profile;
+    private final PiiMaskService piiMaskService;
     private final String table;
 
     public JdbcAuditSearchService(JdbcTemplate jdbc,
                                   ComplianceAuditProperties props,
-                                  ComplianceProfile profile) {
+                                  ComplianceProfile profile,
+                                  PiiMaskService piiMaskService) {
         this.jdbc = jdbc;
         this.props = props;
         this.profile = profile;
+        this.piiMaskService = piiMaskService;
         this.table = (props.getSchema() != null && !props.getSchema().isBlank())
             ? props.getSchema() + "." + props.getTableName()
             : props.getTableName();
@@ -164,11 +159,11 @@ public class JdbcAuditSearchService implements AuditSearchService {
         return props.getActuator().getSearch().isMaskOutput() || profile.maskOutputOnSearch();
     }
 
-    private static RowMapper<Map<String, Object>> rowMapper(boolean mask) {
+    private RowMapper<Map<String, Object>> rowMapper(boolean mask) {
         return (rs, rn) -> mapRow(rs, mask);
     }
 
-    private static Map<String, Object> mapRow(ResultSet rs, boolean mask) throws SQLException {
+    private Map<String, Object> mapRow(ResultSet rs, boolean mask) throws SQLException {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", rs.getLong("id"));
         Timestamp ts = rs.getTimestamp("invoked_at");
@@ -180,8 +175,8 @@ public class JdbcAuditSearchService implements AuditSearchService {
         m.put("teamId", rs.getString("team_id"));
         String prompt = rs.getString("prompt");
         String response = rs.getString("response");
-        m.put("prompt", mask ? maskPii(prompt) : prompt);
-        m.put("response", mask ? maskPii(response) : response);
+        m.put("prompt", mask ? piiMaskService.mask(prompt) : prompt);
+        m.put("response", mask ? piiMaskService.mask(response) : response);
         m.put("tokenIn", nullableInt(rs, "token_in"));
         m.put("tokenOut", nullableInt(rs, "token_out"));
         m.put("latencyMs", rs.getInt("latency_ms"));
@@ -189,19 +184,6 @@ public class JdbcAuditSearchService implements AuditSearchService {
         m.put("costKrw", cost == null ? null : ((Number) cost).longValue() / 1_000_000L);
         m.put("status", rs.getString("status"));
         return m;
-    }
-
-    static String maskPii(String s) {
-        if (s == null || s.isEmpty()) {
-            return s;
-        }
-        String r = P_RRN.matcher(s).replaceAll("[MASKED:rrn:01]");
-        r = P_FOREIGNER.matcher(r).replaceAll("[MASKED:fgnid:08]");
-        r = P_CARD.matcher(r).replaceAll("[MASKED:card:03]");
-        r = P_BIZ.matcher(r).replaceAll("[MASKED:bizno:04]");
-        r = P_PHONE.matcher(r).replaceAll("[MASKED:tel:05]");
-        r = P_EMAIL.matcher(r).replaceAll("[MASKED:email:06]");
-        return r;
     }
 
     private static Integer nullableInt(ResultSet rs, String col) throws SQLException {

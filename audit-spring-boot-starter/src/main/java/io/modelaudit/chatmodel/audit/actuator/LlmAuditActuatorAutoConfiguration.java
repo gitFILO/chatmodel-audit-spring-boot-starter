@@ -3,6 +3,7 @@ package io.modelaudit.chatmodel.audit.actuator;
 import io.modelaudit.chatmodel.audit.ComplianceAuditAutoConfiguration;
 import io.modelaudit.chatmodel.audit.ComplianceAuditProperties;
 import io.modelaudit.chatmodel.audit.core.compliance.ComplianceProfile;
+import io.modelaudit.chatmodel.audit.core.compliance.pii.PiiMaskService;
 import io.modelaudit.chatmodel.audit.writer.AsyncBatchWriter;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
@@ -31,11 +32,13 @@ public class LlmAuditActuatorAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(AuditSearchService.class)
-    @ConditionalOnBean(JdbcTemplate.class)
+    @ConditionalOnBean({JdbcTemplate.class, PiiMaskService.class})
     @ConditionalOnProperty(prefix = "audit.compliance.actuator", name = "search-enabled", havingValue = "true", matchIfMissing = true)
-    AuditSearchService auditSearchService(JdbcTemplate jdbcTemplate, ComplianceAuditProperties props) {
-        ComplianceProfile profile = ComplianceProfile.fromMode(props.getCompliance().getMode());
-        return new JdbcAuditSearchService(jdbcTemplate, props, profile);
+    AuditSearchService auditSearchService(JdbcTemplate jdbcTemplate,
+                                          ComplianceAuditProperties props,
+                                          ComplianceProfile profile,
+                                          PiiMaskService piiMaskService) {
+        return new JdbcAuditSearchService(jdbcTemplate, props, profile, piiMaskService);
     }
 
     @Bean
