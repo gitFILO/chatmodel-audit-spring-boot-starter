@@ -1,1 +1,2 @@
 io.github.gitfilo.chatmodel.audit.ComplianceAuditAutoConfiguration
+io.github.gitfilo.chatmodel.audit.actuator.LlmAuditActuatorAutoConfiguration
