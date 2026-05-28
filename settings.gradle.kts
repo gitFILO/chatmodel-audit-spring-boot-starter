@@ -1,7 +1,8 @@
 rootProject.name = "chatmodel-audit-spring-boot-starter"
 
-include("audit-starter")
+include("audit-core")
+include("audit-spring-boot-starter")
 include("audit-starter-tests")
 
-// audit-core 모듈 분리는 O3에서 추가 (provider-agnostic core)
-// audit-langchain4j-starter는 v0.3 예정 — settings 미포함
+// v0.3 예정 — LangChain4j 어댑터 모듈 (현 phase에는 build 미포함)
+// include("audit-langchain4j-starter")
