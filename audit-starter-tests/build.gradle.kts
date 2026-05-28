@@ -22,7 +22,7 @@ dependencyManagement {
 }
 
 dependencies {
-    testImplementation(project(":audit-starter"))
+    testImplementation(project(":audit-spring-boot-starter"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("com.h2database:h2")
 }
