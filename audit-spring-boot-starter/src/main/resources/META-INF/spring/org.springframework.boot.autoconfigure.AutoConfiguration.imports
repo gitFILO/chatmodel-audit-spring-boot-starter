@@ -1,1 +1,2 @@
 io.modelaudit.chatmodel.audit.ComplianceAuditAutoConfiguration
+io.modelaudit.chatmodel.audit.actuator.LlmAuditActuatorAutoConfiguration
