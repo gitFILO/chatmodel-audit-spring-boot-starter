@@ -2,7 +2,7 @@ package io.modelaudit.chatmodel.audit.core.model;
 
 import java.time.Instant;
 
-// OTel GenAI semconv 호환 컬럼 9개 + 감사/보안 플래그 확장 — vault 04 §3-1
+// 9 OTel GenAI semconv compatible columns + audit/security flag extensions — vault 04 §3-1
 public record AuditRecord(
     Instant invokedAt,
     String traceId,

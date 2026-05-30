@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 
 public final class KoreanCardDetector implements PiiDetector {
 
-    // 4-4-4-4 카드 패턴 — 구분자는 dash/space/없음 혼용
+    // 4-4-4-4 card pattern — separator may be dash/space/none, mixed
     private static final Pattern PATTERN = Pattern.compile(
             "(?<!\\d)\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}[-\\s]?\\d{4}(?!\\d)");
 

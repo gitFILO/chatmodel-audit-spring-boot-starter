@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 
 public final class KoreanPhoneDetector implements PiiDetector {
 
-    // 010/011/016/017/018/019 휴대전화 (010 표준 + 구 번호 호환)
+    // 010/011/016/017/018/019 mobile (current 010 standard + legacy prefixes)
     private static final Pattern PATTERN = Pattern.compile(
             "(?<!\\d)01\\d[-\\s]?\\d{3,4}[-\\s]?\\d{4}(?!\\d)");
 

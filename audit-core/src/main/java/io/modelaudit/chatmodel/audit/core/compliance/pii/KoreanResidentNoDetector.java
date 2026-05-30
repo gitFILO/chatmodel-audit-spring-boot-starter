@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 
 public final class KoreanResidentNoDetector implements PiiDetector {
 
-    // 7번째 자리 [1-4]가 내국인 — 외국인(5-8)은 KoreanForeignerIdDetector
+    // 7th digit [1-4] is Korean national — foreigner (5-8) handled by KoreanForeignerIdDetector
     private static final Pattern PATTERN = Pattern.compile("(?<!\\d)\\d{6}[-\\s]?[1-4]\\d{6}(?!\\d)");
 
     private static final String MASK = "[MASKED:rrn:01]";

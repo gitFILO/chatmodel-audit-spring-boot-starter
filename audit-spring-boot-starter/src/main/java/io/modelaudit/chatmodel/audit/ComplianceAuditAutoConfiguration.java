@@ -48,7 +48,7 @@ import java.util.List;
 @EnableConfigurationProperties(ComplianceAuditProperties.class)
 public class ComplianceAuditAutoConfiguration {
 
-    // user-id-resolver: spring-security(default) / mdc / header — 미지원 값은 spring-security로 폴백
+    // user-id-resolver: spring-security(default) / mdc / header — unknown values fall back to spring-security
     @Bean
     @ConditionalOnMissingBean
     UserIdResolver userIdResolver(ComplianceAuditProperties props) {
@@ -88,7 +88,7 @@ public class ComplianceAuditAutoConfiguration {
         return new DefaultCostCalculator(catalog, rate);
     }
 
-    // 외부 starter는 자기 ComplianceProfile만 @Bean 추가하면 props.compliance.mode 한 줄로 활성화
+    // External starter registers its own ComplianceProfile @Bean and activates via the single props.compliance.mode line
     @Bean
     @Primary
     @ConditionalOnMissingBean(name = "complianceProfile")
@@ -118,7 +118,7 @@ public class ComplianceAuditAutoConfiguration {
         return KrFinancialProfile.INSTANCE;
     }
 
-    // PII detector 6종 — 외부 starter는 동일 PiiDetector 인터페이스로 자기 detector @Bean 추가 시 자동 발견
+    // 6 built-in PII detectors — external starter additions via the PiiDetector interface are auto-discovered
     @Bean
     @ConditionalOnMissingBean(KoreanResidentNoDetector.class)
     KoreanResidentNoDetector koreanResidentNoDetector() {
@@ -155,7 +155,7 @@ public class ComplianceAuditAutoConfiguration {
         return new EmailDetector();
     }
 
-    // 활성 detector 셋 = profile.piiMaskEnabled() ? profile.piiProviders() : []
+    // Active detector set = profile.piiMaskEnabled() ? profile.piiProviders() : []
     @Bean
     @ConditionalOnMissingBean
     PiiMaskService piiMaskService(ObjectProvider<List<PiiDetector>> detectorsProvider,

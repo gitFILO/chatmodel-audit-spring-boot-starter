@@ -68,7 +68,7 @@ class DefaultCostCalculatorTest {
         assertThat(microKrw).isEqualTo(103_500_000L);
     }
 
-    // 1×15 + 0×75 = 15 × 1380 = 20700 micro KRW — 정수 자릿수 유지
+    // 1×15 + 0×75 = 15 × 1380 = 20700 micro KRW — preserves integer precision
     @Test
     void integerArithmeticPreservesPrecision() {
         Long microKrw = calculator.calculate("anthropic", "claude-opus-4-7", 1, 0);

@@ -30,7 +30,7 @@ class KoreanCardDetectorTest {
 
     @Test
     void doesNotMaskFifteenDigitSubstring() {
-        // 15자리는 카드 패턴 미충족
+        // 15 digits do not match the card pattern
         String result = detector.mask("번호 123456789012345 표시");
 
         assertThat(result).isEqualTo("번호 123456789012345 표시");

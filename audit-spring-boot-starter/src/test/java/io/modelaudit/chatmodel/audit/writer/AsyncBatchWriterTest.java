@@ -67,7 +67,7 @@ class AsyncBatchWriterTest {
 
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         AuditMicrometerMetrics metrics = new AuditMicrometerMetrics(registry);
-        // 큐 2, 배치 1000(절대 flush 트리거 안 됨), tick 매우 김 — drop 강제
+        // queue 2, batch 1000 (never triggers flush), very long tick — forces drop
         AsyncBatchWriter writer = new AsyncBatchWriter(repo, props(2, 1000, 60_000L, "drop"), metrics);
         try {
             for (int i = 0; i < 50; i++) writer.offer(sample(i));

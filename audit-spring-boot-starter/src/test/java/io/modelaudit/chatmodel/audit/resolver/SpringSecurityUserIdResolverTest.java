@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class SpringSecurityUserIdResolverTest {
 
-    // spring-security가 클래스패스에 없는 환경 — 항상 null 반환
+    // spring-security absent from classpath — always returns null
     @Test
     void returnsNullWithoutSpringSecurityOnClasspath() {
         SpringSecurityUserIdResolver resolver = new SpringSecurityUserIdResolver();

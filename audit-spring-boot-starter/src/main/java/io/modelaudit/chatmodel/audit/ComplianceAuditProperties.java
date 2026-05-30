@@ -214,7 +214,7 @@ public class ComplianceAuditProperties {
 
         private boolean maskEnabled = false;
 
-        // true 시 검출 실패한 prompt는 호출 차단
+        // When true, prompts that fail detection block the call
         private boolean required = false;
 
         private List<String> providers = new ArrayList<>();

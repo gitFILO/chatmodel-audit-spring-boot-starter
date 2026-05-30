@@ -23,7 +23,7 @@ class KoreanForeignerIdDetectorTest {
 
     @Test
     void skipsResidentSeventhDigit() {
-        // 내국인 [1-4]는 무시
+        // Korean nationals [1-4] are ignored
         String result = detector.mask("내국인 900101-1234567 미적용");
 
         assertThat(result).isEqualTo("내국인 900101-1234567 미적용");
