@@ -16,7 +16,7 @@ public final class DefaultCostCalculator implements CostCalculator {
         this.exchangeRate = Objects.requireNonNull(exchangeRate, "exchangeRate");
     }
 
-    // micro KRW = (token_in × inputPerMUSD + token_out × outputPerMUSD) × usdToKrw — 1M factor가 micro 변환과 상쇄
+    // micro KRW = (token_in × inputPerMUSD + token_out × outputPerMUSD) × usdToKrw — the 1M factor cancels with micro conversion
     @Override
     public Long calculate(String provider, String model, Integer tokenIn, Integer tokenOut) {
         ModelPricing pricing = catalog.lookup(provider, model);

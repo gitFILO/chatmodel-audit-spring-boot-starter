@@ -64,7 +64,7 @@ class PiiMaskServiceTest {
 
     @Test
     void skipsDetectorsNotInActiveIds() {
-        // email만 활성 — phone은 등록되어 있어도 적용 안 됨
+        // Only email active — phone is registered but not applied
         PiiMaskService svc = new PiiMaskService(krDetectors, List.of("email"));
 
         String masked = svc.mask("연락 010-1234-5678 메일 a@b.com");
@@ -98,7 +98,7 @@ class PiiMaskServiceTest {
 
     @Test
     void externalStarterDetectorIsDiscovered() {
-        // 외부 starter (audit-us-financial-starter)가 @Bean으로 등록한 detector 시뮬레이션
+        // Simulates a detector @Bean registered by an external starter (audit-us-financial-starter)
         PiiDetector ssn = new PiiDetector() {
             @Override public String id() { return "us-ssn"; }
             @Override public String mask(String input) {

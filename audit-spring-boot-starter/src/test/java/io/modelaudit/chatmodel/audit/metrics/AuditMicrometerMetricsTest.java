@@ -47,7 +47,7 @@ class AuditMicrometerMetricsTest {
         assertThat(fail).isNotNull();
         assertThat(fail.count()).isEqualTo(1.0);
 
-        // 동일 태그 조합은 캐시되어 같은 인스턴스 반환
+        // Same tag combination is cached and returns the same instance
         assertThat(m.invocationCounter("openai", "gpt-4o", "SUCCESS", "team-a"))
             .isSameAs(m.invocationCounter("openai", "gpt-4o", "SUCCESS", "team-a"));
     }
@@ -192,13 +192,13 @@ class AuditMicrometerMetricsTest {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         AuditMicrometerMetrics m = new AuditMicrometerMetrics(registry);
 
-        // 호출 5종 활성화
+        // Activate the 5 invocation meters
         m.recordInvocation("openai", "gpt-4o", "SUCCESS", "t");
         m.recordLatency("openai", "gpt-4o", Duration.ofMillis(1));
         m.recordTokenInput("openai", "gpt-4o", 1);
         m.recordTokenOutput("openai", "gpt-4o", 1);
         m.recordCostKrwMicro("openai", "gpt-4o", "t", 1_000_000L);
-        // 감사 3종 활성화 (queue gauges는 별도)
+        // Activate the 3 audit meters (queue gauges registered separately)
         m.dropCounter("overflow").increment();
         m.flushBatchSize(1);
         Timer.Sample s = m.flushTimerStart();

@@ -6,7 +6,7 @@ public final class KrFinancialProfile implements ComplianceProfile {
 
     public static final KrFinancialProfile INSTANCE = new KrFinancialProfile();
 
-    // v0.1 한국 PII 6종 — id는 PiiDetector.id()와 매칭 (kr-account/kr-health-insurance-no는 외부 detector로 확장)
+    // v0.1 ships 6 Korean PII types — ids match PiiDetector.id() (kr-account/kr-health-insurance-no extend via external detectors)
     private static final List<String> PII_PROVIDERS = List.of(
             "kr-resident-no",
             "kr-foreigner-id",
@@ -24,7 +24,7 @@ public final class KrFinancialProfile implements ComplianceProfile {
         return "kr-financial";
     }
 
-    // 전자금융감독규정 + 금융권 5년 보관 표준
+    // Electronic Financial Supervisory Regulation + KR financial sector 5-year retention standard
     @Override
     public int retentionDays() {
         return 1825;

@@ -7,7 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-// provider/model lookup 카탈로그 — provider/model 키 정규화는 소문자 trim
+// provider/model lookup catalog — keys are normalized via lowercase trim
 public final class ModelPricingCatalog {
 
     private final Map<String, ModelPricing> table;

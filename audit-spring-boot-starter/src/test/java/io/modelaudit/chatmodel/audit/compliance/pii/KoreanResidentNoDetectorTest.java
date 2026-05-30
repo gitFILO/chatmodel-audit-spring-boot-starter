@@ -30,7 +30,7 @@ class KoreanResidentNoDetectorTest {
 
     @Test
     void skipsForeignerSeventhDigit() {
-        // 외국인은 [5-8] → 내국인 detector 미적용
+        // Foreigner [5-8] -> resident detector does not apply
         String result = detector.mask("외국인 900101-5234567 미적용");
 
         assertThat(result).isEqualTo("외국인 900101-5234567 미적용");

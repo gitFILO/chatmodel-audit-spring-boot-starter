@@ -15,7 +15,7 @@ import java.util.List;
 
 public class JdbcAuditRecordRepository {
 
-    // vault 11 §3-4 INSERT_SQL — PG JSONB 캐스트 포함 원형 (H2는 캐스트 제거)
+    // vault 11 §3-4 INSERT_SQL — canonical form with PG JSONB cast (cast stripped for H2)
     static final String INSERT_SQL = """
         INSERT INTO %s (
             invoked_at, trace_id, span_id,
@@ -34,7 +34,7 @@ public class JdbcAuditRecordRepository {
     public JdbcAuditRecordRepository(DataSource ds, ComplianceAuditProperties props) {
         this.jdbc = new JdbcTemplate(ds);
         String table = (props.getSchema() != null ? props.getSchema() + "." : "") + props.getTableName();
-        // PG는 ?::jsonb 캐스트, H2는 JSON 컬럼이라 캐스트 제거
+        // PG keeps ?::jsonb cast; H2 uses JSON column so cast is stripped
         String template = isPostgres(ds) ? INSERT_SQL : INSERT_SQL.replace("?::jsonb", "?");
         this.sql = String.format(template, table);
     }

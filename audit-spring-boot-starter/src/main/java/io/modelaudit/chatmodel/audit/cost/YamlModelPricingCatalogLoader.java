@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// llm-cost-table.yml → ModelPricingCatalog 로더 (snakeyaml 2.x 사용, spring-boot-starter 의존)
+// llm-cost-table.yml -> ModelPricingCatalog loader (uses snakeyaml 2.x, spring-boot-starter dependency)
 public final class YamlModelPricingCatalogLoader {
 
     private YamlModelPricingCatalogLoader() {

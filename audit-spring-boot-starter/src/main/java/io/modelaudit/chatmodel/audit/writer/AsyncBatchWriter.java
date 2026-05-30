@@ -15,7 +15,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// vault 11 §3-3 — BLOCK/DROP 분기 + 단일 daemon scheduler + 30s graceful drain
+// vault 11 §3-3 — BLOCK/DROP branching + single daemon scheduler + 30s graceful drain
 public class AsyncBatchWriter implements DisposableBean {
 
     private final BlockingQueue<AuditRecord> queue;
@@ -74,7 +74,7 @@ public class AsyncBatchWriter implements DisposableBean {
             try {
                 scheduler.execute(this::flush);
             } catch (Exception ignored) {
-                // scheduler 종료 직후면 무시 — 다음 destroy 루프가 drain
+                // Ignore if scheduler just shut down — the destroy loop drains the queue
             }
         }
     }
@@ -98,7 +98,7 @@ public class AsyncBatchWriter implements DisposableBean {
             if (metrics != null) {
                 metrics.flushErrorCounter().increment();
             }
-            // v0.1 best-effort 재큐 — DROP 모드 또는 큐 가득 시 유실 가능. spool은 v0.4.
+            // v0.1 best-effort re-enqueue — may drop under DROP mode or full queue; spool lands in v0.4.
             for (AuditRecord r : batch) {
                 queue.offer(r);
             }
@@ -134,7 +134,7 @@ public class AsyncBatchWriter implements DisposableBean {
             int before = queue.size();
             flush();
             if (queue.size() >= before) {
-                // 무한 루프 방지 — 재큐로 인해 크기가 줄지 않으면 중단
+                // Prevent infinite loop — abort if size does not shrink due to re-enqueue
                 break;
             }
         }

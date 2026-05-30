@@ -14,7 +14,7 @@ public final class PiiMaskService {
         Objects.requireNonNull(detectors, "detectors");
         Objects.requireNonNull(activeIds, "activeIds");
         Map<String, PiiDetector> map = new LinkedHashMap<>();
-        // 동일 id 중복 시 뒤에서 등록한 detector가 이긴다 — 외부 starter override 의도
+        // On duplicate id, the later-registered detector wins — intentional for external starter override
         for (PiiDetector d : detectors) {
             if (d != null && d.id() != null) {
                 map.put(d.id(), d);

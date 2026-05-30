@@ -31,7 +31,7 @@ class ComplianceProfileTest {
         assertThat(p.piiMaskEnabled()).isTrue();
         assertThat(p.maskOutputOnSearch()).isTrue();
         assertThat(p.costCurrency()).isEqualTo(CostCurrency.KRW);
-        // PiiDetector.id() 매칭 — v0.1 한국 6종 + 국가 중립 email
+        // PiiDetector.id() matches — v0.1 6 Korean types + country-neutral email
         assertThat(p.piiProviders()).containsExactly(
                 "kr-resident-no",
                 "kr-foreigner-id",

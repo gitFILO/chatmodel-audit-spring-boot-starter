@@ -13,7 +13,7 @@ repositories {
     mavenCentral()
 }
 
-// Spring Boot 무관 — provider-agnostic core (ADR-006, vault 12-langchain4j-compatibility)
+// Spring Boot independent — provider-agnostic core (ADR-006, vault 12-langchain4j-compatibility)
 dependencies {
     api("io.micrometer:micrometer-observation:1.14.0")
     api("com.fasterxml.jackson.core:jackson-databind:2.18.0")

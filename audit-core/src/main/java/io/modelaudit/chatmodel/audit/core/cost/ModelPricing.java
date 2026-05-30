@@ -2,7 +2,7 @@ package io.modelaudit.chatmodel.audit.core.cost;
 
 import java.math.BigDecimal;
 
-// 토큰 1M 당 USD 단가 — 입력/출력 분리
+// USD price per 1M tokens — input/output split
 public record ModelPricing(
     String provider,
     String model,

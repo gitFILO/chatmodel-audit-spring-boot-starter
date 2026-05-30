@@ -10,7 +10,7 @@ import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.ToDoubleFunction;
 
-// vault 05 §6 풀세트 — 호출 5종(count/latency/tokens.in/tokens.out/cost.krw) + 감사 5종(queue.depth/queue.capacity/queue.drops/flush.duration/flush.batch.size)
+// Full set per vault 05 §6 — 5 invocation meters (count/latency/tokens.in/tokens.out/cost.krw) + 5 audit meters (queue.depth/queue.capacity/queue.drops/flush.duration/flush.batch.size)
 public class AuditMicrometerMetrics {
 
     static final String UNKNOWN = "unknown";
@@ -35,7 +35,7 @@ public class AuditMicrometerMetrics {
         this.flushBatchSizeSummary = DistributionSummary.builder("llm.audit.flush.batch.size").register(registry);
     }
 
-    // ── 호출 메트릭 (vault 05 §6) ──────────────────────────────────
+    // ── Invocation meters (vault 05 §6) ────────────────────────────
 
     public Counter invocationCounter(String provider, String model, String status, String team) {
         String p = nz(provider), m = nz(model), s = nz(status), t = nz(team);
@@ -105,7 +105,7 @@ public class AuditMicrometerMetrics {
                 .register(registry));
     }
 
-    // micro-KRW(vault 03 §5-5) 입력을 KRW 단위 카운터로 누적
+    // Accumulate micro-KRW input (vault 03 §5-5) into KRW-unit counter
     public void recordCostKrwMicro(String provider, String model, String team, long amountMicroKrw) {
         if (amountMicroKrw <= 0) {
             return;
@@ -113,7 +113,7 @@ public class AuditMicrometerMetrics {
         costKrwCounter(provider, model, team).increment(amountMicroKrw / 1_000_000.0);
     }
 
-    // ── 감사 메트릭 (vault 05 §6) ──────────────────────────────────
+    // ── Audit meters (vault 05 §6) ─────────────────────────────────
 
     public Counter dropCounter(String reason) {
         String r = nz(reason);

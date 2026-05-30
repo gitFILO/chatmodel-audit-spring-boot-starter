@@ -4,7 +4,7 @@ import io.modelaudit.chatmodel.audit.core.resolver.UserIdResolver;
 
 import java.lang.reflect.Method;
 
-// spring-web가 클래스패스에 없으면 RequestContextHolder 로딩 실패 — 그 경우 null 반환
+// RequestContextHolder fails to load without spring-web on the classpath — return null in that case
 public final class HeaderUserIdResolver implements UserIdResolver {
 
     private final String headerName;
